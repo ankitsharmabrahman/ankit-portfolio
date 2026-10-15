@@ -17,8 +17,16 @@ function AdminLogin() {
     setLoading(true);
 
     try {
+      const API_URL = import.meta.env.VITE_API_URL;
+
+      if (!API_URL) {
+        throw new Error(
+          'Backend URL is missing. Please configure VITE_API_URL.'
+        );
+      }
+
       const response = await fetch(
-        'http://localhost:3000/api/admin/login',
+        `${API_URL.replace(/\/+$/, '')}/api/admin/login`,
         {
           method: 'POST',
           headers: {
@@ -31,11 +39,15 @@ function AdminLogin() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Invalid email or password');
+        throw new Error(
+          data.message || 'Invalid email or password'
+        );
       }
 
       if (!data.token) {
-        throw new Error('Login response did not contain a token');
+        throw new Error(
+          'Login response did not contain a token'
+        );
       }
 
       sessionStorage.setItem('adminToken', data.token);
@@ -43,7 +55,7 @@ function AdminLogin() {
     } catch (err) {
       setError(
         err.message === 'Failed to fetch'
-          ? 'Cannot connect to the server. Please try again.'
+          ? 'Cannot connect to the server. Please check your backend URL and CORS settings.'
           : err.message || 'Unable to login'
       );
     } finally {
@@ -255,13 +267,23 @@ function AdminLogin() {
         }
 
         @keyframes loginEnter {
-          from { opacity: 0; transform: translateY(18px) scale(.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from {
+            opacity: 0;
+            transform: translateY(18px) scale(.98);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
 
         @keyframes logoFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
         }
 
         @media (max-width: 480px) {
@@ -291,8 +313,12 @@ function AdminLogin() {
           ⚡
         </div>
 
-        <div className="login-eyebrow">Ankit Sharma · Portfolio</div>
+        <div className="login-eyebrow">
+          Ankit Sharma · Portfolio
+        </div>
+
         <h1 className="login-title">Welcome Back</h1>
+
         <p className="login-description">
           Sign in to access your admin dashboard and manage your messages.
         </p>
@@ -302,6 +328,7 @@ function AdminLogin() {
             <label className="login-label" htmlFor="admin-email">
               Email Address
             </label>
+
             <input
               id="admin-email"
               className="login-input"
@@ -340,7 +367,9 @@ function AdminLogin() {
               <button
                 type="button"
                 className="login-toggle-password"
-                onClick={() => setShowPassword((current) => !current)}
+                onClick={() =>
+                  setShowPassword((current) => !current)
+                }
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? 'Hide' : 'Show'}
@@ -362,7 +391,9 @@ function AdminLogin() {
             {loading ? (
               <>Verifying credentials...</>
             ) : (
-              <>Sign In <span aria-hidden="true">→</span></>
+              <>
+                Sign In <span aria-hidden="true">→</span>
+              </>
             )}
           </button>
         </form>
