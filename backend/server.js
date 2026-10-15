@@ -58,7 +58,7 @@ function verifyAdmin(req, res, next) {
 
 
 const dbName = 'portfolioAnkit';
-const url = 'mongodb://localhost:27017';
+const url = process.env.MONGODB_URI;
 
 const client = new MongoClient(url);
 
