@@ -3,6 +3,8 @@ import { useState } from 'react';
 import './css/contact.css';
 
 function Contact() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,56 +22,57 @@ function Contact() {
     }));
   }
 
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setStatus('Sending message...');
 
-  
-async function handleSubmit(event) {
-  event.preventDefault();
-
-  setStatus('Sending message...');
-
-  try {
-    const response = await fetch(
-      'http://localhost:3000/api/contacts',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+    try {
+      if (!API_URL) {
+        throw new Error('Backend URL is not configured.');
       }
-    );
 
-    const data = await response.json();
+      const response = await fetch(
+        `${API_URL.replace(/\/+$/, '')}/api/contacts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to send message.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send message.');
+      }
+
+      setStatus('Message sent successfully!');
+
+      setFormData({
+        name: '',
+        email: '',
+        message: '',
+      });
+    } catch (error) {
+      console.error('Contact form error:', error);
+
+      setStatus(
+        'Unable to send message. Please try again later.'
+      );
     }
-
-    setStatus('Message sent successfully!');
-
-    setFormData({
-      name: '',
-      email: '',
-      message: '',
-    });
-  } catch (error) {
-    console.error('Contact form error:', error);
-
-    setStatus(
-      'Unable to send message. Please check if the backend is running.'
-    );
   }
-}
-
 
   return (
     <section className="contact-section" id="contact">
       <div className="contact-container">
-
         <div className="contact-heading">
           <p className="contact-label">GET IN TOUCH</p>
 
-          <h2>Let's Work <span>Together</span></h2>
+          <h2>
+            Let's Work <span>Together</span>
+          </h2>
 
           <p>
             Have a project idea or an opportunity? Feel free to
@@ -78,7 +81,6 @@ async function handleSubmit(event) {
         </div>
 
         <div className="contact-content">
-
           {/* Left side */}
           <div className="contact-info">
             <h3>Let's start a conversation.</h3>
@@ -180,16 +182,17 @@ async function handleSubmit(event) {
               {status}
             </p>
           </form>
-
         </div>
 
         <div className="contact-footer">
-          <p>Designed & built with <span>♥</span> by Ankit Sharma</p>
+          <p>
+            Designed &amp; built with <span>♥</span> by Ankit Sharma
+          </p>
         </div>
-
       </div>
     </section>
   );
 }
 
 export default Contact;
+
