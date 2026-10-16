@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function AdminMessages() {
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,11 +23,18 @@ function AdminMessages() {
       setLoading(true);
       setError('');
 
-      const response = await fetch('http://localhost:3000/api/contacts', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (!API_URL) {
+        throw new Error('Backend URL is not configured.');
+      }
+
+      const response = await fetch(
+        `${API_URL.replace(/\/+$/, '')}/api/contacts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -41,6 +50,7 @@ function AdminMessages() {
 
       setMessages(Array.isArray(data) ? data : data.contacts || []);
     } catch (err) {
+      console.error('Fetch messages error:', err);
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
@@ -56,11 +66,17 @@ function AdminMessages() {
 
     const token = sessionStorage.getItem('adminToken');
 
+    if (!token) {
+      navigate('/admin-login');
+      return;
+    }
+
     try {
       setDeletingId(id);
+      setError('');
 
       const response = await fetch(
-        `http://localhost:3000/api/contacts/${id}`,
+        `${API_URL.replace(/\/+$/, '')}/api/contacts/${id}`,
         {
           method: 'DELETE',
           headers: {
@@ -71,6 +87,12 @@ function AdminMessages() {
 
       const data = await response.json();
 
+      if (response.status === 401 || response.status === 403) {
+        sessionStorage.removeItem('adminToken');
+        navigate('/admin-login');
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(data.message || 'Unable to delete message');
       }
@@ -79,6 +101,7 @@ function AdminMessages() {
         previous.filter((message) => message._id !== id)
       );
     } catch (err) {
+      console.error('Delete message error:', err);
       setError(err.message || 'Delete failed');
     } finally {
       setDeletingId('');
@@ -328,6 +351,7 @@ function AdminMessages() {
         }
 
         .admin-retry {
+          display: block;
           margin-top: 14px;
           padding: 10px 18px;
           border: 0;
@@ -452,7 +476,7 @@ function AdminMessages() {
               >
                 {deletingId === message._id
                   ? 'Deleting…'
-                  : 'Delete message  ×'}
+                  : 'Delete message ×'}
               </button>
             </article>
           ))}
@@ -463,4 +487,3 @@ function AdminMessages() {
 }
 
 export default AdminMessages;
-
